@@ -1,5 +1,7 @@
 # stacksync
 
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+
 Automatically detect the tech stack of any project and generate a JSON or markdown file — perfect for keeping your portfolio up to date.
 
 ## Features
@@ -16,7 +18,17 @@ Automatically detect the tech stack of any project and generate a JSON or markdo
 Run the CLI in your project root:
 
 ```bash
-npx stacksync scan --out tech.md --format markdown --assets public/tech-stack
+# Default usage (scans current dir, outputs tech.json)
+npx stacksync
+
+# Scan specific repo and output markdown
+npx stacksync ./my-project --out tech.md --format markdown --assets public/tech-stack
+
+# Quick JSON output
+npx stacksync --json --out stack.json
+
+# Ignore specific packages
+npx stacksync --ignore lodash,moment
 ```
 
 ## Configuration

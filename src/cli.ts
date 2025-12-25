@@ -13,24 +13,47 @@ program
     .version("0.1.0");
 
 program
-    .command("scan")
-    .option("--repo <path>", "Path to repo", ".")
+    .argument("[repo]", "Path to repo", ".")
     .option("--out <path>", "Output file path", "./tech.json")
     .option("--format <format>", "Output format (json, markdown)", "json")
+    .option("--json", "Shortcut for --format json")
     .option("--assets <path>", "Path to copy logo assets to")
-    .action(async (options) => {
-        const config = await loadConfig();
-        const result = await scanRepo(options.repo, config);
+    .option("--ignore <packages>", "Comma-separated list of packages to ignore")
+    .option("--config <path>", "Path to config file")
+    .action(async (repo, options) => {
+        try {
+            const config = await loadConfig(options.config);
+            
+            // Merge CLI ignores
+            if (options.ignore) {
+                const cliIgnores = options.ignore.split(",").map((s: string) => s.trim());
+                config.ignore = [...(config.ignore || []), ...cliIgnores];
+            }
 
-        await writeOutput(
-            options.out, 
-            result, 
-            config, 
-            options.format as "json" | "markdown",
-            options.assets
-        );
+            // Handle --json shortcut
+            const format = options.json ? "json" : options.format;
 
-        console.log(chalk.green("✔ Tech stack generated successfully!"));
+            const result = await scanRepo(repo, config);
+
+            await writeOutput(
+                options.out, 
+                result, 
+                config, 
+                format as "json" | "markdown",
+                options.assets
+            );
+
+            console.log(chalk.green("✔ Tech stack generated successfully!"));
+            process.exit(0);
+        } catch (error) {
+            console.error(chalk.red("✖ Failed to generate tech stack:"));
+            if (error instanceof Error) {
+                console.error(chalk.red(error.message));
+            } else {
+                console.error(chalk.red(String(error)));
+            }
+            process.exit(1);
+        }
     });
 
 program.parse();

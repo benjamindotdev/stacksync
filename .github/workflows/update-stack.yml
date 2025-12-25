@@ -1,4 +1,4 @@
-name: Stack Scan
+name: Update Stack
 on:
   push:
     branches: [ main ]
@@ -9,7 +9,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: npm install
-      - run: npx stackscan scan --repo . --out ./src/data/tech.json
+      - run: npm run build
+      - run: node dist/cli.js . --out ./tech.json
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Update tech stack"
