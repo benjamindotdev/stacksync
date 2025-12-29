@@ -2,6 +2,7 @@ export interface DetectorResult {
     name: string;
     logo: string;
     type: string;
+    color?: string;
 }
 
 export interface TechDefinition {

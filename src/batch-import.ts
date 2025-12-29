@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { techMap } from './techMap';
+import simpleIconsHex from './simple-icons-hex.json';
 
 const INPUT_DIR = path.join(process.cwd(), 'stacksync', 'input');
 const OUTPUT_DIR = path.join(process.cwd(), 'stacksync', 'output');
@@ -17,8 +18,15 @@ function toCamelCase(str: string): string {
     .join('');
 }
 
-async function batchImport() {
+interface BatchImportOptions {
+  color?: string;
+}
+
+async function batchImport(options: BatchImportOptions = {}) {
   console.log('🚀 Starting Batch Import...');
+  if (options.color) {
+    console.log(`🎨 Color mode: ${options.color}`);
+  }
 
   if (!fs.existsSync(INPUT_DIR)) {
     console.log(`Creating input directory at: ${INPUT_DIR}`);
@@ -53,10 +61,29 @@ async function batchImport() {
         Object.keys(allDeps).forEach(dep => {
           if (techMap[dep]) {
             const tech = techMap[dep];
+            
+            // Determine Color
+            let color = null;
+            if (options.color === 'white') color = '#FFFFFF';
+            else if (options.color === 'black') color = '#000000';
+            else if (options.color && options.color.startsWith('#')) color = options.color;
+            else {
+               // Default to brand color
+               // techMap keys are aliases, but simpleIconsHex uses slugs.
+               // We need to find the slug. techMap doesn't store the slug directly, 
+               // but we can try to look it up or assume the alias is close.
+               // Actually, techDefinitions has the id.
+               // Let's try to look up the hex using the dependency name (dep) which is often the slug
+               // or fallback to the tech name.
+               const hex = (simpleIconsHex as any)[dep] || (simpleIconsHex as any)[tech.name.toLowerCase()];
+               if (hex) color = `#${hex}`;
+            }
+
             detectedTechs.push({
               name: tech.name,
               slug: dep,
-              logo: `https://raw.githubusercontent.com/benjamindotdev/stacksync/main/assets/logos/${tech.logo}`
+              logo: `https://raw.githubusercontent.com/benjamindotdev/stacksync/main/assets/logos/${tech.logo}`,
+              color: color
             });
           }
         });

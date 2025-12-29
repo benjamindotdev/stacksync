@@ -17,8 +17,9 @@ program
 program
     .command("batch-import")
     .description("Import stacks from multiple projects in stacksync/input")
-    .action(async () => {
-        await batchImport();
+    .option("--color <mode>", "Color mode (brand, white, black, or hex)", "brand")
+    .action(async (options) => {
+        await batchImport(options);
     });
 
 program
@@ -28,6 +29,7 @@ program
     .option("--json", "Shortcut for --format json")
     .option("--assets <path>", "Path to copy logo assets to")
     .option("--ignore <packages>", "Comma-separated list of packages to ignore")
+    .option("--color <mode>", "Color mode (brand, white, black, or hex)", "brand")
     .option("--config <path>", "Path to config file")
     .action(async (repo, options) => {
         try {
@@ -37,6 +39,11 @@ program
             if (options.ignore) {
                 const cliIgnores = options.ignore.split(",").map((s: string) => s.trim());
                 config.ignore = [...(config.ignore || []), ...cliIgnores];
+            }
+
+            // Merge CLI color
+            if (options.color) {
+                config.colorMode = options.color;
             }
 
             // Handle --json shortcut
