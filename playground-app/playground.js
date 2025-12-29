@@ -58,16 +58,23 @@ const server = http.createServer(async (req, res) => {
 
     // API: Run Batch Import
     if (req.method === 'POST' && req.url === '/api/batch-import') {
-        try {
-            await batchImport();
-            const results = getBatchResults();
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(results));
-        } catch (e) {
-            console.error(e);
-            res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: e.message }));
-        }
+        let body = '';
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
+        req.on('end', async () => {
+            try {
+                const { color } = JSON.parse(body || '{}');
+                await batchImport({ color });
+                const results = getBatchResults();
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(results));
+            } catch (e) {
+                console.error(e);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: e.message }));
+            }
+        });
         return;
     }
 

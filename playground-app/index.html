@@ -91,22 +91,54 @@
             <p style="margin-bottom: 1rem; color: var(--text); opacity: 0.8;">
                 Place your project folders in <code>playground-app/stacksync/input/</code> and click below.
             </p>
+            
+            <div class="controls">
+                <label>
+                    Color Mode:
+                    <select id="batchColorMode">
+                        <option value="brand">Brand (Default)</option>
+                        <option value="white">White</option>
+                        <option value="black">Black</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </label>
+                <label id="batchCustomColorContainer" style="display: none;">
+                    Custom Color:
+                    <input type="color" id="batchCustomColor" value="#FF5733">
+                </label>
+            </div>
+
             <button onclick="runBatchImport()">Run Batch Import</button>
             <div id="batch-results" style="margin-top: 1rem;"></div>
         </div>
     </div>
 
     <script>
+        document.getElementById('batchColorMode').addEventListener('change', (e) => {
+            const customContainer = document.getElementById('batchCustomColorContainer');
+            customContainer.style.display = e.target.value === 'custom' ? 'inline-flex' : 'none';
+        });
+
         async function runBatchImport() {
             const btn = document.querySelector('button[onclick="runBatchImport()"]');
             const resultsDiv = document.getElementById('batch-results');
+            const colorMode = document.getElementById('batchColorMode').value;
+            let color = colorMode;
+            
+            if (colorMode === 'custom') {
+                color = document.getElementById('batchCustomColor').value;
+            }
             
             btn.disabled = true;
             btn.textContent = 'Running...';
             resultsDiv.innerHTML = '';
 
             try {
-                const res = await fetch('/api/batch-import', { method: 'POST' });
+                const res = await fetch('/api/batch-import', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ color })
+                });
                 const data = await res.json();
                 
                 if (data.error) throw new Error(data.error);
@@ -136,12 +168,35 @@
                             techItem.className = 'tech-item';
 
                             const img = document.createElement('img');
-                            // Extract relative path to use local coloring
+                            
+                            // Use the color from the stack.json if available (which comes from batch import logic)
+                            // But we also want to support the visual preview in the playground if the user changes theme locally?
+                            // The user asked for "option to select different colour modes there" which implies the batch import *process* uses it.
+                            // So the stack.json will have the correct color.
+                            // However, the playground also has a "local" coloring feature for the top scanner.
+                            // For batch import, we rely on the generated stack.json color or the logo URL.
+                            // Since we just ran batch import with the color, the stack.json should have the correct color field.
+                            // But the logo URL is still pointing to raw github.
+                            // If we want to visualize it here, we can use the same local proxy trick if we want instant feedback,
+                            // OR we trust that the batch import logic set the 'color' field and we use that.
+                            // But wait, the image src is remote. We can't color a remote SVG with CSS unless we inline it or use a proxy.
+                            // The playground proxy `/assets/...` handles coloring.
+                            // Let's use the proxy to visualize the result of the batch import selection.
+                            
                             const relativePath = tech.logo.split('assets/logos/')[1];
                             if (relativePath) {
-                                const colorMode = document.getElementById('colorMode').value;
-                                const customColor = document.getElementById('customColor').value.replace('#', '');
-                                img.src = `/assets/${relativePath}?colorMode=${colorMode}&customColor=%23${customColor}`;
+                                // We use the color that was selected for the batch import
+                                // We can pass it as a query param to the local asset proxy
+                                let proxyColorMode = colorMode;
+                                let proxyCustomColor = '';
+                                
+                                if (colorMode === 'custom') {
+                                    proxyCustomColor = encodeURIComponent(color);
+                                } else if (colorMode === 'brand') {
+                                    proxyColorMode = 'default';
+                                }
+                                
+                                img.src = `/assets/${relativePath}?colorMode=${proxyColorMode}&customColor=${proxyCustomColor}`;
                             } else {
                                 img.src = tech.logo;
                             }
@@ -151,6 +206,12 @@
                             const nameSpan = document.createElement('span');
                             nameSpan.className = 'tech-name';
                             nameSpan.textContent = tech.name;
+                            
+                            // Optional: Show the hex code if debugging
+                            // const colorSpan = document.createElement('span');
+                            // colorSpan.style.fontSize = '10px';
+                            // colorSpan.textContent = tech.color;
+                            // techItem.appendChild(colorSpan);
 
                             techItem.appendChild(img);
                             techItem.appendChild(nameSpan);
