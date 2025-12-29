@@ -1,15 +1,47 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { techMap } = require('../dist/techMap');
-const simpleIconsHex = require('../src/simple-icons-hex.json');
+const { techMap } = require('stacksync/dist/techMap');
+const simpleIconsHex = require('stacksync/dist/simple-icons-hex');
+const { batchImport } = require('stacksync/dist/batch-import');
 
 const PORT = 3000;
-const ASSETS_DIR = path.join(__dirname, '../assets/logos');
+// Resolve assets from the installed stacksync package
+const STACKSYNC_ROOT = path.dirname(require.resolve('stacksync/package.json'));
+const ASSETS_DIR = path.join(STACKSYNC_ROOT, 'assets/logos');
 const LUCIDE_DIR = path.join(path.dirname(require.resolve('lucide-static/package.json')), 'icons');
-const { DEFAULT_CATEGORY_ICONS } = require('../dist/defaults');
+const { DEFAULT_CATEGORY_ICONS } = require('stacksync/dist/defaults');
 
-const server = http.createServer((req, res) => {
+function getBatchResults() {
+    const outputDir = path.join(process.cwd(), 'stacksync/output');
+    if (!fs.existsSync(outputDir)) return [];
+    
+    return fs.readdirSync(outputDir, { withFileTypes: true })
+        .filter(d => d.isDirectory())
+        .map(d => {
+            const stackPath = path.join(outputDir, d.name, 'stack.json');
+            if (fs.existsSync(stackPath)) {
+                return {
+                    name: d.name,
+                    stack: JSON.parse(fs.readFileSync(stackPath, 'utf-8'))
+                };
+            }
+            return null;
+        })
+        .filter(Boolean);
+}
+
+const server = http.createServer(async (req, res) => {
+    // CORS headers for local dev if needed (though we serve static)
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+
+    if (req.method === 'OPTIONS') {
+        res.writeHead(204);
+        res.end();
+        return;
+    }
+
     // Serve HTML
     if (req.method === 'GET' && req.url === '/') {
         fs.readFile(path.join(__dirname, 'index.html'), (err, data) => {
@@ -21,6 +53,34 @@ const server = http.createServer((req, res) => {
             res.writeHead(200, { 'Content-Type': 'text/html' });
             res.end(data);
         });
+        return;
+    }
+
+    // API: Run Batch Import
+    if (req.method === 'POST' && req.url === '/api/batch-import') {
+        try {
+            await batchImport();
+            const results = getBatchResults();
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(results));
+        } catch (e) {
+            console.error(e);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: e.message }));
+        }
+        return;
+    }
+
+    // API: Get Batch Results
+    if (req.method === 'GET' && req.url === '/api/batch-results') {
+        try {
+            const results = getBatchResults();
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(results));
+        } catch (e) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: e.message }));
+        }
         return;
     }
 

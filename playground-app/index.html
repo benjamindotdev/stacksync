@@ -85,9 +85,83 @@
         </div>
 
         <div id="results" class="results"></div>
+
+        <div class="input-section" style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 2rem;">
+            <h2>Batch Import</h2>
+            <p style="margin-bottom: 1rem; color: var(--text); opacity: 0.8;">
+                Place your project folders in <code>playground-app/stacksync/input/</code> and click below.
+            </p>
+            <button onclick="runBatchImport()">Run Batch Import</button>
+            <div id="batch-results" class="results" style="margin-top: 1rem;"></div>
+        </div>
     </div>
 
     <script>
+        async function runBatchImport() {
+            const btn = document.querySelector('button[onclick="runBatchImport()"]');
+            const resultsDiv = document.getElementById('batch-results');
+            
+            btn.disabled = true;
+            btn.textContent = 'Running...';
+            resultsDiv.innerHTML = '';
+
+            try {
+                const res = await fetch('/api/batch-import', { method: 'POST' });
+                const data = await res.json();
+                
+                if (data.error) throw new Error(data.error);
+
+                if (data.length === 0) {
+                    resultsDiv.innerHTML = '<p>No projects found or processed.</p>';
+                } else {
+                    data.forEach(project => {
+                        const projectDiv = document.createElement('div');
+                        projectDiv.style.background = 'var(--card-bg)';
+                        projectDiv.style.border = '1px solid var(--border)';
+                        projectDiv.style.borderRadius = '8px';
+                        projectDiv.style.padding = '1rem';
+                        projectDiv.style.marginBottom = '1rem';
+                        
+                        const title = document.createElement('h3');
+                        title.textContent = project.name;
+                        title.style.marginTop = '0';
+                        projectDiv.appendChild(title);
+
+                        const stackContainer = document.createElement('div');
+                        stackContainer.style.display = 'flex';
+                        stackContainer.style.gap = '0.5rem';
+                        stackContainer.style.flexWrap = 'wrap';
+
+                        project.stack.forEach(tech => {
+                            const img = document.createElement('img');
+                            // Extract relative path to use local coloring
+                            const relativePath = tech.logo.split('assets/logos/')[1];
+                            if (relativePath) {
+                                const colorMode = document.getElementById('colorMode').value;
+                                const customColor = document.getElementById('customColor').value.replace('#', '');
+                                img.src = `/assets/${relativePath}?colorMode=${colorMode}&customColor=%23${customColor}`;
+                            } else {
+                                img.src = tech.logo;
+                            }
+                            
+                            img.height = 40;
+                            img.title = tech.name;
+                            stackContainer.appendChild(img);
+                        });
+
+                        projectDiv.appendChild(stackContainer);
+                        resultsDiv.appendChild(projectDiv);
+                    });
+                }
+
+            } catch (err) {
+                resultsDiv.innerHTML = `<div class="error">${err.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Run Batch Import';
+            }
+        }
+
         function toggleTheme() {
             const body = document.body;
             const current = body.getAttribute('data-theme');
