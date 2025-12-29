@@ -1,8 +1,4 @@
-<h1 align="center">
-  <img src="public/stacksync.svg#gh-light-mode-only" alt="StackSync" width="50" />
-  <img src="public/stacksync-white.svg#gh-dark-mode-only" alt="StackSync" width="50" />
-  StackSync
-</h1>
+<img src="public/stacksync.svg#gh-light-mode-only" alt="StackSync" width="30" /> <img src="public/stacksync-white.svg#gh-dark-mode-only" alt="StackSync" width="30" /> # StackSync
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
