@@ -1221,7 +1221,7 @@ export const techDefinitions: TechDefinition[] = [
       "NextAuth.js"
     ],
     "category": "auth",
-    "logo": "frontend/nextdotjs.svg",
+    "logo": "auth/authjs.svg",
     "frameworks": []
   },
   {

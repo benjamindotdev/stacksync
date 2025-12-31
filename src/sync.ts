@@ -6,6 +6,10 @@ import { generateMarkdown, copyAssets } from './output';
 
 const BASE_DIR = path.join(process.cwd(), 'stacksync');
 
+const SKIPPED_TECHS = [
+  'react-dom',
+];
+
 // Helper to convert "example project" -> "exampleProject"
 function toCamelCase(str: string): string {
   return str
@@ -63,6 +67,8 @@ async function sync(options: SyncOptions = {}) {
         const detectedTechs: any[] = [];
 
         Object.keys(allDeps).forEach(dep => {
+          if (SKIPPED_TECHS.includes(dep)) return;
+
           if (techMap[dep]) {
             const tech = techMap[dep];
             
@@ -97,9 +103,19 @@ async function sync(options: SyncOptions = {}) {
           }
         });
 
-        // 2. Deduplicate
-        const uniqueTechs = Array.from(new Set(detectedTechs.map(t => t.slug)))
+        // 2. Deduplicate by slug
+        let uniqueTechs = Array.from(new Set(detectedTechs.map(t => t.slug)))
           .map(slug => detectedTechs.find(t => t.slug === slug)!);
+
+        // 3. Deduplicate by logo (avoid showing same logo multiple times)
+        const seenLogos = new Set<string>();
+        uniqueTechs = uniqueTechs.filter(t => {
+            if (seenLogos.has(t.logo)) {
+                return false;
+            }
+            seenLogos.add(t.logo);
+            return true;
+        });
         
         // Resolve Assets (Copy & Fallback)
         const assetsDir = path.join(process.cwd(), 'public', 'assets', 'logos');
