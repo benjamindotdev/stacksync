@@ -1,7 +1,7 @@
 {
   "name": "stacksync",
   "version": "0.1.1",
-  "description": "Automatically detect tech stacks from repositories and generate logos, JSON, and markdown for portfolios.",
+  "description": "Automatically detect tech stacks from package.jsons and generate logos, JSON, and markdown for portfolios.",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,8 +12,7 @@
     "build": "tsup src --format cjs,esm --dts --shims",
     "dev": "tsup src --watch",
     "start": "node dist/cli.js",
-    "import": "ts-node src/import.ts",
-    "batch-import": "ts-node src/batch-import.ts"
+    "sync": "ts-node src/sync.ts"
   },
   "keywords": [
     "tech-stack",

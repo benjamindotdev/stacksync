@@ -1571,7 +1571,7 @@ export const techDefinitions: TechDefinition[] = [
       "husky"
     ],
     "category": "lint",
-    "logo": "lint/husqvarna.svg",
+    "logo": "lint/husky.svg",
     "frameworks": []
   },
   {

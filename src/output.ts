@@ -50,9 +50,9 @@ export async function writeOutput(
     }
 }
 
-async function copyAssets(techs: DetectorResult[], dest: string, config: StackSyncConfig): Promise<Set<string>> {
-    // Assume assets are in ../assets/logos relative to this file (dist/output.js or src/output.ts)
-    const srcDir = path.resolve(__dirname, "../assets/logos");
+export async function copyAssets(techs: DetectorResult[], dest: string, config: StackSyncConfig): Promise<Set<string>> {
+    // Assume assets are in ../public/assets/logos relative to this file (dist/output.js or src/output.ts)
+    const srcDir = path.resolve(__dirname, "../public/assets/logos");
     
     // Resolve lucide-static path reliably
     let lucideDir: string;
@@ -112,12 +112,12 @@ async function copyAssets(techs: DetectorResult[], dest: string, config: StackSy
                 color = config.customColor;
             } 
             // 3. Default mode (Brand color)
-            else if (config.colorMode === 'default' || !config.colorMode) {
+            else if (config.colorMode === 'default' || !config.colorMode || config.colorMode === 'brand') {
                 if (!isDefault) {
                     // Try to find brand color for Simple Icons
                     const slug = path.basename(t.logo, '.svg');
                     // @ts-ignore
-                    const brandHex = simpleIconsHex[slug];
+                    const brandHex = (simpleIconsHex as any)[slug] || (simpleIconsHex as any)[slug.toLowerCase()];
                     if (brandHex) {
                         color = `#${brandHex}`;
                     }
@@ -157,7 +157,7 @@ async function copyAssets(techs: DetectorResult[], dest: string, config: StackSy
     return copied;
 }
 
-function generateMarkdown(techs: DetectorResult[], assetsPath?: string, availableLogos?: Set<string>): string {
+export function generateMarkdown(techs: DetectorResult[], assetsPath?: string, availableLogos?: Set<string>): string {
     // Group by type
     const grouped: Record<string, DetectorResult[]> = {};
     for (const t of techs) {
@@ -190,7 +190,9 @@ function generateMarkdown(techs: DetectorResult[], assetsPath?: string, availabl
         md += `## ${title}\n\n`;
         
         for (const t of grouped[type]) {
-            if (assetsPath && t.logo && availableLogos?.has(t.logo)) {
+            if (t.logo && (t.logo.startsWith('http') || t.logo.startsWith('//'))) {
+                 md += `- <img src="${t.logo}" alt="${t.name}" width="24" height="24" /> **${t.name}**\n`;
+            } else if (assetsPath && t.logo && availableLogos?.has(t.logo)) {
                 const logoUrl = `${assetsPath}/${t.logo}`;
                 md += `- <img src="${logoUrl}" alt="${t.name}" width="24" height="24" /> **${t.name}**\n`;
             } else {

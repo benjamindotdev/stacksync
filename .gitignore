@@ -4,3 +4,4 @@ dist/
 playground-app/node_modules/
 playground-app/stacksync/input/
 playground-app/stacksync/output/
+stacksync/

@@ -2,24 +2,24 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { techMap } = require('stacksync/dist/techMap');
-const simpleIconsHex = require('stacksync/dist/simple-icons-hex');
-const { batchImport } = require('stacksync/dist/batch-import');
+const simpleIconsHex = require('../src/simple-icons-hex.json');
+const { sync } = require('stacksync/dist/sync');
 
 const PORT = 3000;
 // Resolve assets from the installed stacksync package
 const STACKSYNC_ROOT = path.dirname(require.resolve('stacksync/package.json'));
-const ASSETS_DIR = path.join(STACKSYNC_ROOT, 'assets/logos');
+const ASSETS_DIR = path.join(STACKSYNC_ROOT, 'public/assets/logos');
 const LUCIDE_DIR = path.join(path.dirname(require.resolve('lucide-static/package.json')), 'icons');
 const { DEFAULT_CATEGORY_ICONS } = require('stacksync/dist/defaults');
 
-function getBatchResults() {
-    const outputDir = path.join(process.cwd(), 'stacksync/output');
-    if (!fs.existsSync(outputDir)) return [];
+function getSyncResults() {
+    const baseDir = path.join(process.cwd(), 'stacksync');
+    if (!fs.existsSync(baseDir)) return [];
     
-    return fs.readdirSync(outputDir, { withFileTypes: true })
-        .filter(d => d.isDirectory())
+    return fs.readdirSync(baseDir, { withFileTypes: true })
+        .filter(d => d.isDirectory() && d.name !== 'input' && d.name !== 'output')
         .map(d => {
-            const stackPath = path.join(outputDir, d.name, 'stack.json');
+            const stackPath = path.join(baseDir, d.name, 'stack.json');
             if (fs.existsSync(stackPath)) {
                 return {
                     name: d.name,
@@ -56,8 +56,8 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    // API: Run Batch Import
-    if (req.method === 'POST' && req.url === '/api/batch-import') {
+    // API: Run Sync
+    if (req.method === 'POST' && req.url === '/api/sync') {
         let body = '';
         req.on('data', chunk => {
             body += chunk.toString();
@@ -65,8 +65,8 @@ const server = http.createServer(async (req, res) => {
         req.on('end', async () => {
             try {
                 const { color } = JSON.parse(body || '{}');
-                await batchImport({ color });
-                const results = getBatchResults();
+                await sync({ color });
+                const results = getSyncResults();
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify(results));
             } catch (e) {
@@ -78,10 +78,10 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    // API: Get Batch Results
-    if (req.method === 'GET' && req.url === '/api/batch-results') {
+    // API: Get Sync Results
+    if (req.method === 'GET' && req.url === '/api/sync-results') {
         try {
-            const results = getBatchResults();
+            const results = getSyncResults();
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(results));
         } catch (e) {
@@ -172,52 +172,6 @@ const server = http.createServer(async (req, res) => {
 
             res.writeHead(200, { 'Content-Type': 'image/svg+xml' });
             res.end(svgContent);
-        });
-        return;
-    }
-
-    // Scan Endpoint
-    if (req.method === 'POST' && req.url === '/scan') {
-        let body = '';
-        req.on('data', chunk => {
-            body += chunk.toString();
-        });
-        req.on('end', () => {
-            try {
-                const pkg = JSON.parse(body);
-                const deps = {
-                    ...pkg.dependencies,
-                    ...pkg.devDependencies
-                };
-
-                const results = [];
-                for (const dep of Object.keys(deps)) {
-                    if (techMap[dep]) {
-                        const tech = techMap[dep];
-                        let logoUrl = tech.logo;
-                        
-                        // Check if logo exists, if not use default
-                        const logoPath = path.join(ASSETS_DIR, tech.logo);
-                        if (!fs.existsSync(logoPath)) {
-                             const defaultIcon = DEFAULT_CATEGORY_ICONS[tech.type];
-                             if (defaultIcon) {
-                                 logoUrl = `defaults/${defaultIcon}.svg`;
-                             }
-                        }
-
-                        results.push({
-                            name: tech.name,
-                            logoUrl: `/assets/${logoUrl}`
-                        });
-                    }
-                }
-
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify(results));
-            } catch (e) {
-                res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: 'Invalid JSON' }));
-            }
         });
         return;
     }

@@ -15,14 +15,11 @@ Designed for portfolios, READMEs, dashboards, and CI automation.
 
 ## Features
 
-- 🔍 Detect dependencies from `package.json` and lockfiles
-- 🗂 Detect frameworks and tooling from file structure  
-  (e.g. Next.js, Prisma, Docker, CI)
+- 🔍 Detect dependencies from `package.json`
 - 🖼 Built-in SVG logos with graceful fallbacks
-- 💾 Generate JSON, Markdown, or badge-friendly output
-- 🤖 Optional GitHub Action for auto-updating portfolios
-- 🔧 Fully configurable via `.stacksync.json` / config files
-- ⚙️ Deterministic output suitable for CI
+- 💾 Generate JSON, Markdown, and asset files
+- 🎨 Support for Brand, White, Black, or Custom color modes
+- 🤖 Automates Portfolio / Monorepo README updates
 
 ---
 
@@ -44,93 +41,78 @@ stacksync
 
 ## Usage
 
-Run the CLI in your project root:
+1.  **Prepare Input**: 
+    *   Place your project folders inside `stacksync/`.
+    *   **OR** simply drop your `package.json` files directly into `stacksync/`. 
+        *   If you have multiple, you can name them `package (1).json`, `package (2).json`, etc.
+        *   StackSync will automatically create folders based on the project name defined in each file.
+2.  **Run Sync**:
 
 ```bash
-# Default usage (scan current dir, outputs tech.json)
-npx stacksync
+npx stacksync sync
 ```
 
-Scan a specific repository and output Markdown:
+### Add Command
+
+You can also add a project from anywhere on your disk using the CLI. You can point to a `package.json` file OR a project directory:
 
 ```bash
-npx stacksync ./my-project \
-  --out tech.md \
-  --format markdown \
-  --assets public/tech-stack
+# Point to a file
+npx stacksync add ./path/to/package.json
+
+# Point to a folder (automatically finds package.json)
+npx stacksync add ../my-project
 ```
 
-Quick JSON output (stdout or file):
+This will copy the `package.json` into a new folder inside `stacksync/` (e.g., `stacksync/my-project/`), handling name collisions automatically.
+
+This will:
+*   Scan all projects in `stacksync/`.
+*   Generate `stack.json` and `stack.md` inside each project folder.
+*   Copy logo assets to `public/assets/logos/`.
+*   Update your root `README.md` with a "My Projects" section.
+
+### Options
 
 ```bash
-npx stacksync --json
-npx stacksync --json --out stack.json
-```
+# Use white logos
+npx stacksync sync --color white
 
-Ignore specific packages or tools:
+# Use black logos
+npx stacksync sync --color black
 
-```bash
-npx stacksync --ignore lodash,moment
+# Use brand colors (default)
+npx stacksync sync --color brand
 ```
 
 ---
 
 ## Output
 
-Stack Sync produces normalized metadata grouped by category and enriched with logo information.
+For each project in `stacksync/`, a `stack.json` is generated in the same folder.
 
-Example JSON output:
+Example `stack.json`:
 
 ```json
-{
-  "languages": ["TypeScript"],
-  "frameworks": ["Next.js"],
-  "backend": ["Node.js"],
-  "css": ["Tailwind CSS"],
-  "auth": ["Auth.js"],
-  "tooling": ["ESLint", "Prettier"],
-  "cloud": [],
-  "meta": {
-    "generatedAt": "2025-12-25T00:00:00.000Z",
-    "generator": "stacksync",
-    "version": "0.1.0"
+[
+  {
+    "name": "TypeScript",
+    "slug": "typescript",
+    "logo": "https://raw.githubusercontent.com/benjamindotdev/stacksync/main/public/assets/logos/language/typescript.svg",
+    "relativePath": "public/assets/logos/language/typescript.svg",
+    "color": "#3178C6"
+  },
+  {
+    "name": "Next.js",
+    "slug": "next",
+    "logo": "https://raw.githubusercontent.com/benjamindotdev/stacksync/main/public/assets/logos/frameworks/nextjs.svg",
+    "relativePath": "public/assets/logos/frameworks/nextjs.svg",
+    "color": "#000000"
   }
-}
+]
 ```
 
 Anything without a known logo still renders cleanly using category defaults (e.g. a lock icon for auth).
-
----
-
-## Configuration
-
-Stack Sync uses **cosmiconfig**. Create one of:
-
-* `.stacksyncrc`
-* `.stacksyncrc.json`
-* `stacksync.config.json`
-
-### Options
-
-| Option        | Type       | Description                               |
-| ------------- | ---------- | ----------------------------------------- |
-| `colorMode`   | `string`   | `default`, `white`, `black`, or `custom`  |
-| `customColor` | `string`   | Hex color used when `colorMode: "custom"` |
-| `iconColors`  | `object`   | Per-tech color overrides                  |
-| `ignore`      | `string[]` | Package / tech names to ignore            |
-
-### Example `stacksync.config.json`
-
-```json
-{
-  "colorMode": "white",
-  "iconColors": {
-    "React": "#61DAFB",
-    "TypeScript": "#3178C6"
-  },
-  "ignore": ["lodash", "moment"]
-}
-```
 
 ---
 
@@ -165,7 +147,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npx stacksync@latest --out tech.json
+      - run: npx stacksync sync
 ```
 
 ---
@@ -214,3 +196,30 @@ If you want, next I can:
 - write `CONTRIBUTING.md`
 - review your npm publish checklist line by line
 ```
+
+
+<!-- STACKSYNC_START -->
+## My Projects
+
+### asozial
+<p>
+  <img src="public/assets/logos/auth/jsonwebtokens.svg" alt="JWT" height="25" style="margin-right: 10px;" />
+  <img src="public/assets/logos/frontend/nextdotjs.svg" alt="Auth.js" height="25" style="margin-right: 10px;" />
+  <img src="public/assets/logos/testing/jest.svg" alt="Jest" height="25" style="margin-right: 10px;" />
+</p>
+
+### portfolio
+<p>
+  <img src="public/assets/logos/frontend/react.svg" alt="React" height="25" style="margin-right: 10px;" />
+  <img src="public/assets/logos/frontend/react.svg" alt="ReactDOM" height="25" style="margin-right: 10px;" />
+  <img src="public/assets/logos/language/typescript.svg" alt="TypeScript" height="25" style="margin-right: 10px;" />
+  <img src="public/assets/logos/testing/playwright.svg" alt="Playwright" height="25" style="margin-right: 10px;" />
+  <img src="public/assets/logos/testing/testinglibrary.svg" alt="Testing Library" height="25" style="margin-right: 10px;" />
+  <img src="public/assets/logos/lint/husky.svg" alt="Husky" height="25" style="margin-right: 10px;" />
+  <img src="public/assets/logos/testing/jest.svg" alt="Jest" height="25" style="margin-right: 10px;" />
+  <img src="public/assets/logos/css/postcss.svg" alt="PostCSS" height="25" style="margin-right: 10px;" />
+  <img src="public/assets/logos/css/tailwindcss.svg" alt="TailwindCSS" height="25" style="margin-right: 10px;" />
+  <img src="public/assets/logos/build/vite.svg" alt="Vite" height="25" style="margin-right: 10px;" />
+</p>
+
+<!-- STACKSYNC_END -->

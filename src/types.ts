@@ -18,7 +18,7 @@ export interface StackSyncConfig {
     ignore?: string[];
     aliases?: Record<string, string>;
     logosPath?: string;
-    colorMode?: 'default' | 'white' | 'black' | 'custom';
+    colorMode?: 'default' | 'white' | 'black' | 'custom' | 'brand';
     customColor?: string;
     iconColors?: Record<string, string>;
 }

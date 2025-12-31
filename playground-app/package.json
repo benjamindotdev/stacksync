@@ -4,7 +4,7 @@
   "description": "A playground to test stacksync",
   "scripts": {
     "start": "node playground.js",
-    "test-batch": "node node_modules/stacksync/dist/cli.js batch-import"
+    "test-sync": "node node_modules/stacksync/dist/cli.js sync"
   },
   "dependencies": {
     "stacksync": "file:.."
