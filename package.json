@@ -1,7 +1,7 @@
 {
   "name": "stacksync",
-  "version": "0.1.5",
-  "description": "Automatically detect tech stacks from package.jsons and generate logos, JSON, and markdown for portfolios.",
+  "version": "0.1.6",
+  "description": "Automatically detect tech stacks from repositories and generate logos, JSON, and markdown for portfolios.",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",

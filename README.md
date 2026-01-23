@@ -1,15 +1,11 @@
-<h1 align="center">
-  <img src="public/stacksync.svg#gh-light-mode-only" alt="StackSync" width="50" />
-  <img src="public/stacksync-white.svg#gh-dark-mode-only" alt="StackSync" width="50" />
-  StackSync
-</h1>
+# <img src="public/stacksync.svg#gh-light-mode-only" alt="StackSync" width="30" /> <img src="public/stacksync-white.svg#gh-dark-mode-only" alt="StackSync" width="30" /> StackSync
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
 Automatically detect the tech stack of any project and generate structured output (JSON, Markdown, or badges).  
 Designed for portfolios, READMEs, dashboards, and CI automation.
 
-**Stack Sync** scans a repository (dependencies + file structure), normalizes detected technologies into categories, and maps them to logos with sensible fallbacks.
+**StackSync** scans a repository (dependencies + file structure), normalizes detected technologies into categories, and maps them to logos with sensible fallbacks.
 
 ---
 
@@ -116,9 +112,10 @@ Anything without a known logo still renders cleanly using category defaults (e.g
 
 ---
 
+
 ## Logo resolution
 
-Stack Sync resolves logos in the following order:
+StackSync resolves logos in the following order:
 
 1. Built-in curated registry
 2. Known aliases (e.g. `next-auth` → **Auth.js**)
@@ -131,7 +128,7 @@ This guarantees usable output even when a logo is missing.
 
 ## GitHub Actions (optional)
 
-Use Stack Sync in CI to keep stack metadata up to date:
+Use StackSync in CI to keep stack metadata up to date:
 
 ```yaml
 name: stacksync
@@ -152,7 +149,7 @@ jobs:
 
 ---
 
-## What Stack Sync does *not* do
+## What StackSync does *not* do
 
 * ❌ It does not execute or analyze runtime code
 * ❌ It does not attempt to infer architectural quality
